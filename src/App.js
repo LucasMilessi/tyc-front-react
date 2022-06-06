@@ -8,8 +8,14 @@ const URL_API = 'http://localhost:8082/api/termYcond'
 function App() {
 
   const [tyc, setTyc] = useState([]);
-  const [tipoDoc, setTipoDoc] = useState([]);
-  const [doc, setDoc] = useState([]);
+  const [tipoDoc, setTipoDoc] = useState();
+  const [doc, setDoc] = useState();
+  const [check, setCheck] = useState(false);
+  const [estado, setEstado] = useState(true);
+
+  const AbrirPagina = () => {
+    window.open("Hola")
+  }
 
   useEffect(() => {
     fetch(URL_API + '/mostrarTyC')
@@ -30,22 +36,34 @@ function App() {
     const request = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos)
+      body: JSON.stringify(datos),
     };
 
-    fetch(URL_API + "/crearAcept", request)
+    console.log(datos)
+    console.log(request)
+
+    fetch(URL_API + '/crearAcept',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      })
       .then(response => response.json())
       .then((termYcond) => {
         console.log(termYcond);
+      })
+      .catch((error) => {
+        console.log("Error: ", error);
       });
+
+
+    setCheck(!check);
+    setEstado(false);
   }
 
-  const TipoDeDocumento = (event) => {
-    setTipoDoc(event.target.value)
-  };
-
-  const NumDocumento = (event) => {
-    setDoc(event.target.value)
+  const HabilitarCheck = () => {
+    setCheck(!check);
+    setEstado(false);
   }
 
   return (
@@ -61,7 +79,7 @@ function App() {
       <p className='m-4 row justify-content-center'>Tipo de Documento</p>
 
       <div class="container input-group">
-        <select className='form-select form-select-lg mb-3' onChange={TipoDeDocumento}>
+        <select className='form-select form-select-lg mb-3' onChange={event => { setTipoDoc(event.target.value) }}>
           <option className='btn btn-primary'>Elegir Tipo documento</option>
           <option value="Cedula">Cedula</option>
           <option value="Pasaporte">Pasaporte</option>
@@ -78,7 +96,8 @@ function App() {
           class="form-control"
           placeholder='Ingrese su numero de documento'
           aria-label="Large"
-          aria-describedby="inputGroup-sizing-sm" onChange={NumDocumento} />
+          aria-describedby="inputGroup-sizing-sm"
+          onChange={event => { setDoc(event.target.value) }} />
       </div>
 
       <br />
@@ -87,16 +106,20 @@ function App() {
 
       <div class="container">
         <div class="form-check">
-          <input class="form-check-input m-3 row justify-content-center" type="checkbox" value="" id="flexCheckDefault" onClick={AgregarAceptTyC} />
+          <input class="form-check-input m-3 row justify-content-center"
+            type="checkbox"
+            value="{check}"
+            disabled={estado}
+            onChange={AgregarAceptTyC}
+          />
           <Popup trigger={<button className='btn btn-warning m-2'>Leer Terminos y Condiciones</button>} position="right center">
             <div>
               {tyc.descripcion}
-              <button>Leeido</button>
+              <button className='btn btn-warning m-3' onChange={HabilitarCheck}>Aceptar TyC</button>
             </div>
           </Popup>
         </div>
       </div>
-
     </>
   );
 }
