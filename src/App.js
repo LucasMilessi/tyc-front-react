@@ -3,11 +3,11 @@ import { Modal, Button } from 'react-bootstrap';
 import { Formik, Field, Form } from "formik";
 import * as Yup from 'yup';
 
-const URL_API = 'http://localhost:8082/api/termYcond'
+const URL_API = process.env.URL_API_TYC;
 
 const docSchema = Yup.object().shape({
-  documento: Yup.string()
-    .required("Campo obligatorio"),
+  numDocumento: Yup.string()
+    .required("Este campo es obligatorio. Por favor ingrese su número de documento"),
   checkB: Yup.boolean()
 });
 
@@ -19,18 +19,20 @@ function App() {
   const [show, setShow] = useState(false);
   const [tyc, setTyc] = useState([]);
   const [tipoDoc, setTipoDoc] = useState();
+  const [doc, setDoc] = useState("");
   const [check, setCheck] = useState(false);
   const [estado, setEstado] = useState(true);
   const [boton, setBoton] = useState(true);
 
-
-  const validarCedula = (value) => {
+    const validarCedula = (value) => {
     const cedulaValida = /[0-9]{2}-PN-[0-9]{3}-[0-9]{4}/;
     
     if(cedulaValida.test(value.replace(/\s/g, ""))){
       setBoton(false)
+      setDoc(value)
     }else{
       setBoton(true)
+      setDoc("")
     }
 
     return cedulaValida.test(value.replace(/\s/g, ""))
@@ -43,8 +45,10 @@ function App() {
     
     if(pasaporteValido.test(value.replace(/\s/g, ""))){
       setBoton(false)
+      setDoc(value)
     }else{
       setBoton(true)
+      setDoc("")
     }
 
     return pasaporteValido.test(value.replace(/\s/g, ""))
@@ -61,14 +65,18 @@ function App() {
         setTyc(data));
   }, []);
 
-  const AgregarAceptTyC = (event) => {
-    event.preventDefault();
+  const AgregarAceptTyC = () => {
+    //values.preventDefault();
+
+    console.log(doc)
 
     let datos = {
       tipoDocumento: tipoDoc,
-      documento: event.documento,
+      documento: doc,
       versionTC: tyc.version
     };
+
+    console.log(datos);
 
     const request = {
       method: 'POST',
@@ -133,11 +141,13 @@ function App() {
 
       <Formik
         initialValues={{
-          documento: '',
-          checkB: false
+          numDocumento: '',
+          checkB: false,
+          
         }}
         validationSchema={docSchema}
-        onSubmit={(values) => AgregarAceptTyC(values)}
+        onSubmit={(values) => {
+          setDoc(values.numDocumento)}}
       >
         {({ errors, touched }) => (
           <Form>
@@ -145,19 +155,19 @@ function App() {
             <div className="container input-group">
               <span className="input-group-text" id="inputGroup-sizing-lg">Número de Documento</span>
               <Field
-                id="documento"
+                id="numDocumento"
                 type="text"
                 className="form-control"
-                name="documento"
-                placeholder='Ingrese su numero de documento'
+                name="numDocumento"
+                placeholder='Ingrese su número de documento'
                 aria-label="Large"
                 aria-describedby="inputGroup-sizing-sm" 
                 validate={tipoDoc === 'Pasaporte' ? validarPasaporte : validarCedula}
                  />
             </div>
 
-            {errors.documento && touched.documento ? (
-              <div className='m-4 row justify-content-center'>{errors.documento}</div>
+            {errors.numDocumento && touched.numDocumento ? (
+              <div className='m-4 row justify-content-center text-danger'>{errors.numDocumento}</div>
             ) : null}
 
             <br />
@@ -183,7 +193,7 @@ function App() {
 
             <Modal show={show} onHide={handleClose} backdrop='static' keyboard="false">
               <Modal.Header closeButton>
-                <Modal.Title>Terminos y Condiciones</Modal.Title>
+                <Modal.Title><div className='m-0 row justify-content-center'>Terminos y Condiciones</div></Modal.Title>
               </Modal.Header>
               <Modal.Body>{tyc.descripcion}</Modal.Body>
               <Modal.Footer>
